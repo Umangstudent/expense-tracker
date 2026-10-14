@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api', // Adjust base URL as needed
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://expense-tracker-1q7i.onrender.com/api',
 });
 
 api.interceptors.request.use((config) => {
