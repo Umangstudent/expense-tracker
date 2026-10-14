@@ -1,30 +1,33 @@
 package com.example.expense_tracker.controller;
 
-import com.example.expense_tracker.repository.ExpenseRepository;
-import com.example.expense_tracker.repository.IncomeRepository;
+import com.example.expense_tracker.entity.User;
+import com.example.expense_tracker.security.SecurityUtils;
+import com.example.expense_tracker.service.DashboardService;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/dashboard")
 public class DashboardController {
     
-    private final ExpenseRepository expenseRepository;
-    private final IncomeRepository incomeRepository;
+    private final DashboardService dashboardService;
+    private final SecurityUtils securityUtils;
 
-    public DashboardController(ExpenseRepository expenseRepository, IncomeRepository incomeRepository) {
-        this.expenseRepository = expenseRepository;
-        this.incomeRepository = incomeRepository;
+    public DashboardController(DashboardService dashboardService, SecurityUtils securityUtils) {
+        this.dashboardService = dashboardService;
+        this.securityUtils = securityUtils;
     }
     
+    @GetMapping("/summary")
+    public Map<String, Object> getDashboardSummary() {
+        User user = securityUtils.getCurrentUser();
+        return dashboardService.getDashboardSummary(user);
+    }
+
     @GetMapping("/{userId}/summary")
-    public Map<String, Object> getDashboardSummary(@PathVariable Long userId) {
-        Map<String, Object> summary = new HashMap<>();
-        summary.put("expensesByCategory", expenseRepository.getCategoryBreakdown(userId));
-        summary.put("monthlyExpenses", expenseRepository.getMonthlySummary(userId));
-        summary.put("monthlyIncomes", incomeRepository.getMonthlySummary(userId));
-        return summary;
+    public Map<String, Object> getDashboardSummaryByUserId(@PathVariable Long userId) {
+        User user = securityUtils.getCurrentUser();
+        return dashboardService.getDashboardSummary(user);
     }
 }

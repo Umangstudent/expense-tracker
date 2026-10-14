@@ -1,8 +1,9 @@
 package com.example.expense_tracker.controller;
 
 import com.example.expense_tracker.entity.Expense;
-import com.example.expense_tracker.exception.ResourceNotFoundException;
-import com.example.expense_tracker.repository.ExpenseRepository;
+import com.example.expense_tracker.entity.User;
+import com.example.expense_tracker.security.SecurityUtils;
+import com.example.expense_tracker.service.ExpenseService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,27 +13,44 @@ import java.util.List;
 @RequestMapping("/api/expenses")
 public class ExpenseController {
     
-    private final ExpenseRepository expenseRepository;
+    private final ExpenseService expenseService;
+    private final SecurityUtils securityUtils;
 
-    public ExpenseController(ExpenseRepository expenseRepository) {
-        this.expenseRepository = expenseRepository;
+    public ExpenseController(ExpenseService expenseService, SecurityUtils securityUtils) {
+        this.expenseService = expenseService;
+        this.securityUtils = securityUtils;
     }
     
+    @GetMapping
+    public List<Expense> getExpenses() {
+        User user = securityUtils.getCurrentUser();
+        return expenseService.getExpensesForUser(user);
+    }
+
     @GetMapping("/user/{userId}")
-    public List<Expense> getExpenses(@PathVariable Long userId) {
-        return expenseRepository.findByUserId(userId);
+    public List<Expense> getExpensesByUserId(@PathVariable Long userId) {
+        User user = securityUtils.getCurrentUser();
+        return expenseService.getExpensesForUser(user);
     }
     
     @PostMapping
-    public Expense createExpense(@RequestBody Expense expense) {
-        return expenseRepository.save(expense);
+    public ResponseEntity<Expense> createExpense(@RequestBody Expense expense) {
+        User user = securityUtils.getCurrentUser();
+        Expense created = expenseService.createExpense(expense, user);
+        return ResponseEntity.ok(created);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Expense> updateExpense(@PathVariable Long id, @RequestBody Expense expense) {
+        User user = securityUtils.getCurrentUser();
+        Expense updated = expenseService.updateExpense(id, expense, user);
+        return ResponseEntity.ok(updated);
     }
     
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteExpense(@PathVariable Long id) {
-        Expense expense = expenseRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Expense not found"));
-        expenseRepository.delete(expense);
+        User user = securityUtils.getCurrentUser();
+        expenseService.deleteExpense(id, user);
         return ResponseEntity.ok().build();
     }
 }
