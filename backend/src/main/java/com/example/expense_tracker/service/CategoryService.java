@@ -8,12 +8,20 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class CategoryService {
     
-    public static final List<String> DEFAULT_CATEGORIES = List.of(
-            "Food", "Transport", "Utilities", "Entertainment", "Shopping", "Health", "Education", "Other"
+    public static final Map<String, String> DEFAULT_CATEGORIES = Map.of(
+            "Food", "#ef4444",
+            "Transport", "#3b82f6",
+            "Utilities", "#f59e0b",
+            "Entertainment", "#8b5cf6",
+            "Shopping", "#ec4899",
+            "Health", "#10b981",
+            "Education", "#06b6d4",
+            "Other", "#64748b"
     );
 
     private final CategoryRepository categoryRepository;
@@ -41,6 +49,9 @@ public class CategoryService {
 
     public Category createCategory(Category category, User user) {
         category.setUser(user);
+        if (category.getColor() == null || category.getColor().isBlank()) {
+            category.setColor("#8b5cf6");
+        }
         return categoryRepository.save(category);
     }
 
@@ -48,6 +59,9 @@ public class CategoryService {
         Category category = getCategoryById(id, user);
         if (categoryDetails.getName() != null) {
             category.setName(categoryDetails.getName());
+        }
+        if (categoryDetails.getColor() != null) {
+            category.setColor(categoryDetails.getColor());
         }
         return categoryRepository.save(category);
     }
@@ -58,10 +72,11 @@ public class CategoryService {
     }
 
     public void createDefaultCategories(User user) {
-        for (String name : DEFAULT_CATEGORIES) {
-            if (!categoryRepository.existsByUserIdAndName(user.getId(), name)) {
+        for (Map.Entry<String, String> entry : DEFAULT_CATEGORIES.entrySet()) {
+            if (!categoryRepository.existsByUserIdAndName(user.getId(), entry.getKey())) {
                 Category category = new Category();
-                category.setName(name);
+                category.setName(entry.getKey());
+                category.setColor(entry.getValue());
                 category.setUser(user);
                 categoryRepository.save(category);
             }

@@ -30,7 +30,8 @@ public class Expense {
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
     
-    @ManyToOne
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
