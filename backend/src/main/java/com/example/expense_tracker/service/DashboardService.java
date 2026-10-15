@@ -107,10 +107,54 @@ public class DashboardService {
 
         List<Map<String, Object>> monthlyBreakdown = new ArrayList<>(monthMap.values());
 
+        // Calculate current month's expense and income
+        java.time.LocalDate today = java.time.LocalDate.now();
+        int curYear = today.getYear();
+        int curMonth = today.getMonthValue();
+
+        BigDecimal currentMonthExpense = BigDecimal.ZERO;
+        if (meList != null) {
+            for (MonthlySummary ms : meList) {
+                if (ms.getYear() != null && ms.getYear() == curYear &&
+                    ms.getMonth() != null && ms.getMonth() == curMonth) {
+                    currentMonthExpense = ms.getTotal();
+                    break;
+                }
+            }
+        }
+        // If no expenses in the exact current month, fall back to totalExpenses or latest month
+        if (currentMonthExpense.compareTo(BigDecimal.ZERO) == 0 && totalExpenses.compareTo(BigDecimal.ZERO) > 0) {
+            if (meList != null && !meList.isEmpty()) {
+                currentMonthExpense = meList.get(meList.size() - 1).getTotal();
+            } else {
+                currentMonthExpense = totalExpenses;
+            }
+        }
+
+        BigDecimal currentMonthIncome = BigDecimal.ZERO;
+        if (miList != null) {
+            for (MonthlySummary ms : miList) {
+                if (ms.getYear() != null && ms.getYear() == curYear &&
+                    ms.getMonth() != null && ms.getMonth() == curMonth) {
+                    currentMonthIncome = ms.getTotal();
+                    break;
+                }
+            }
+        }
+        if (currentMonthIncome.compareTo(BigDecimal.ZERO) == 0 && totalIncome.compareTo(BigDecimal.ZERO) > 0) {
+            if (miList != null && !miList.isEmpty()) {
+                currentMonthIncome = miList.get(miList.size() - 1).getTotal();
+            } else {
+                currentMonthIncome = totalIncome;
+            }
+        }
+
         Map<String, Object> summary = new HashMap<>();
         summary.put("totalIncome", totalIncome);
         summary.put("totalExpenses", totalExpenses);
         summary.put("totalExpense", totalExpenses);
+        summary.put("monthlyExpense", currentMonthExpense);
+        summary.put("monthlyIncome", currentMonthIncome);
         summary.put("balance", balance);
         summary.put("monthlyBreakdown", monthlyBreakdown);
         summary.put("monthlyExpenses", monthlyExpenses);

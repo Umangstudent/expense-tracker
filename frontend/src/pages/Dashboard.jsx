@@ -57,22 +57,37 @@ export default function Dashboard() {
       const res = await api.get('/dashboard/summary');
       const data = res.data || {};
 
-      const totalBalance =
-        data.totalBalance ??
-        data.balance ??
-        (Number(data.monthlyIncome ?? data.totalIncome ?? 0) -
-          Number(data.monthlyExpenses ?? data.monthlyExpense ?? data.totalExpenses ?? data.totalExpense ?? 0));
+      let calculatedExpenses = 0;
+      if (typeof data.monthlyExpense === 'number' || (typeof data.monthlyExpense === 'string' && !isNaN(data.monthlyExpense))) {
+        calculatedExpenses = Number(data.monthlyExpense);
+      } else if (typeof data.totalExpenses === 'number' || (typeof data.totalExpenses === 'string' && !isNaN(data.totalExpenses))) {
+        calculatedExpenses = Number(data.totalExpenses);
+      } else if (typeof data.totalExpense === 'number' || (typeof data.totalExpense === 'string' && !isNaN(data.totalExpense))) {
+        calculatedExpenses = Number(data.totalExpense);
+      } else if (Array.isArray(data.monthlyExpenses) && data.monthlyExpenses.length > 0) {
+        calculatedExpenses = Number(data.monthlyExpenses[data.monthlyExpenses.length - 1]?.total || 0);
+      }
 
-      const monthlyIncome =
-        data.monthlyIncome ?? data.totalIncome ?? data.income ?? 0;
+      let calculatedIncome = 0;
+      if (typeof data.monthlyIncome === 'number' || (typeof data.monthlyIncome === 'string' && !isNaN(data.monthlyIncome))) {
+        calculatedIncome = Number(data.monthlyIncome);
+      } else if (typeof data.totalIncome === 'number' || (typeof data.totalIncome === 'string' && !isNaN(data.totalIncome))) {
+        calculatedIncome = Number(data.totalIncome);
+      } else if (Array.isArray(data.monthlyIncomes) && data.monthlyIncomes.length > 0) {
+        calculatedIncome = Number(data.monthlyIncomes[data.monthlyIncomes.length - 1]?.total || 0);
+      }
 
-      const monthlyExpenses =
-        data.monthlyExpenses ?? data.monthlyExpense ?? data.totalExpenses ?? data.totalExpense ?? data.expense ?? 0;
+      let calculatedBalance = 0;
+      if (typeof data.balance === 'number' || (typeof data.balance === 'string' && !isNaN(data.balance))) {
+        calculatedBalance = Number(data.balance);
+      } else {
+        calculatedBalance = calculatedIncome - calculatedExpenses;
+      }
 
       setSummary({
-        totalBalance: Number(totalBalance) || 0,
-        monthlyIncome: Number(monthlyIncome) || 0,
-        monthlyExpenses: Number(monthlyExpenses) || 0,
+        totalBalance: calculatedBalance,
+        monthlyIncome: calculatedIncome,
+        monthlyExpenses: calculatedExpenses,
       });
 
       // Also fetch expenses & incomes for fallback aggregation if needed
